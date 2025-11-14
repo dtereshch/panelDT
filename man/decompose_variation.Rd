@@ -7,14 +7,12 @@
 decompose_variation(data, variables = NULL, group = NULL)
 }
 \arguments{
-\item{data}{A data frame containing the panel data. Can also be a `plm::pdata.frame`
-or an object with `fixest::panel` structure.}
+\item{data}{A data frame containing the panel data.}
 
 \item{variables}{A character vector specifying which numeric variables to analyze.
 If NULL (default), all numeric variables in the dataset will be used.}
 
-\item{group}{A character string specifying the group ID variable (e.g., individual, firm, country).
-For `plm::pdata.frame` and `fixest::panel` objects, this is automatically extracted.}
+\item{group}{A character string specifying the group ID variable (e.g., individual, firm, country).}
 }
 \value{
 A data frame with the following columns for each variable:
@@ -31,39 +29,4 @@ A data frame with the following columns for each variable:
 Inspired by Stata's xtsum command, this function calculates descriptive statistics
 for panel data and decomposes variance into between and within components.
 Provides insights into variation across groups and over time.
-}
-\examples{
-data("Crime", package = "plm")
-vars_select <- c("crmrte", "polpc")
-decompose_variation(Crime, vars_select, "county")
-
-# Using with simulated panel data
-set.seed(123)
-panel_df <- data.frame(
-  id = rep(1:10, each = 5),
-  time = rep(1:5, 10),
-  y = rnorm(50),
-  x = runif(50)
-)
-decompose_variation(panel_df, c("y", "x"), "id")
-
-# Using with plm::pdata.frame
-if (require(plm)) {
-  data("Produc", package = "plm")
-  pdata <- plm::pdata.frame(Produc, index = c("state", "year"))
-  decompose_variation(pdata)  # Automatically uses all numeric variables
-}
-
-# Using with fixest::panel
-if (require(fixest)) {
-  data("base_did", package = "fixest")
-  panel_data <- base_did
-  # Set panel using fixest::panel
-  decompose_variation(panel_data, group = "id")
-}
-
-}
-\references{
-Based on Stata's xtsum command and corresponding discussion at
-https://stackoverflow.com/questions/49282083/xtsum-command-for-r
 }

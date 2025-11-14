@@ -4,12 +4,10 @@
 #' for panel data and decomposes variance into between and within components.
 #' Provides insights into variation across groups and over time.
 #'
-#' @param data A data frame containing the panel data. Can also be a `plm::pdata.frame`
-#'   or an object with `fixest::panel` structure.
+#' @param data A data frame containing the panel data.
 #' @param variables A character vector specifying which numeric variables to analyze.
 #'   If NULL (default), all numeric variables in the dataset will be used.
 #' @param group A character string specifying the group ID variable (e.g., individual, firm, country).
-#'   For `plm::pdata.frame` and `fixest::panel` objects, this is automatically extracted.
 #'
 #' @return A data frame with the following columns for each variable:
 #'   \item{variable}{The name of the variable}
@@ -21,61 +19,40 @@
 #'   \item{max}{Maximum value}
 #'   \item{obs}{Number of observations}
 #'
-#' @references
-#' Based on Stata's xtsum command and corresponding discussion at
-#' https://stackoverflow.com/questions/49282083/xtsum-command-for-r
-#'
-#' @examples
-#' data("Crime", package = "plm")
-#' vars_select <- c("crmrte", "polpc")
-#' decompose_variation(Crime, vars_select, "county")
-#'
-#' # Using with simulated panel data
-#' set.seed(123)
-#' panel_df <- data.frame(
-#'   id = rep(1:10, each = 5),
-#'   time = rep(1:5, 10),
-#'   y = rnorm(50),
-#'   x = runif(50)
-#' )
-#' decompose_variation(panel_df, c("y", "x"), "id")
-#'
-#' # Using with plm::pdata.frame
-#' if (require(plm)) {
-#'   data("Produc", package = "plm")
-#'   pdata <- plm::pdata.frame(Produc, index = c("state", "year"))
-#'   decompose_variation(pdata)  # Automatically uses all numeric variables
-#' }
-#'
-#' # Using with fixest::panel
-#' if (require(fixest)) {
-#'   data("base_did", package = "fixest")
-#'   panel_data <- base_did
-#'   # Set panel using fixest::panel
-#'   decompose_variation(panel_data, group = "id")
-#' }
-#'
 #' @export
 decompose_variation <- function(data, variables = NULL, group = NULL) {
   # Input validation
   if (!is.data.frame(data)) {
-    stop("'data' must be a data frame, pdata.frame, or similar object")
+    stop("'data' must be a data frame")
   }
 
-  # Handle special panel data objects
-  data_info <- extract_panel_info(data, group)
-  data_df <- data_info$data
-  group_var <- data_info$group_var
-  data_class <- data_info$data_class
+  # Convert to plain data frame to avoid any special class issues
+  data_df <- as.data.frame(data)
+
+  # Validate group parameter
+  if (
+    is.null(group) || !is.character(group) || length(group) == 0 || group == ""
+  ) {
+    stop("The 'group' parameter must be a non-empty character string")
+  }
+
+  if (!group %in% names(data_df)) {
+    stop(
+      "Group variable '",
+      group,
+      "' not found in data frame. Available variables: ",
+      paste(names(data_df), collapse = ", ")
+    )
+  }
 
   # If variables is not specified, use all numeric variables
   if (is.null(variables)) {
-    numeric_vars <- sapply(data_df, is.numeric)
+    numeric_vars <- vapply(data_df, is.numeric, FUN.VALUE = logical(1))
     variables <- names(data_df)[numeric_vars]
 
     # Remove the group variable from variables if it's numeric
-    if (group_var %in% variables) {
-      variables <- variables[variables != group_var]
+    if (group %in% variables) {
+      variables <- variables[variables != group]
     }
 
     # Remove other potential ID variables
@@ -92,6 +69,7 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
     )
   }
 
+  # Validate variables
   missing_vars <- variables[!variables %in% names(data_df)]
   if (length(missing_vars) > 0) {
     stop(
@@ -101,7 +79,9 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
   }
 
   # Check if specified columns are numeric
-  non_numeric_vars <- variables[!sapply(data_df[variables], is.numeric)]
+  non_numeric_vars <- variables[
+    !vapply(data_df[variables], is.numeric, FUN.VALUE = logical(1))
+  ]
   if (length(non_numeric_vars) > 0) {
     stop(
       "The following variables are not numeric: ",
@@ -109,8 +89,12 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
     )
   }
 
-  # Check for too many groups
-  group_vector <- data_df[[group_var]]
+  # Check group variable
+  group_vector <- data_df[[group]]
+  if (length(group_vector) == 0) {
+    stop("Group variable '", group, "' has zero length")
+  }
+
   n_groups <- length(unique(group_vector))
   if (n_groups > 10000) {
     warning(
@@ -124,7 +108,7 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
   decompose_variation_1 <- function(data, varname, group) {
     # Remove rows with NA in the variable or group
     complete_cases <- complete.cases(data[[varname]], data[[group]])
-    df <- data[complete_cases, ]
+    df <- data[complete_cases, , drop = FALSE]
 
     if (nrow(df) == 0) {
       return(data.frame(
@@ -145,19 +129,19 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
 
     # Calculate overall statistics
     overall_mean <- mean(x, na.rm = TRUE)
-    overall_sd <- stats::sd(x, na.rm = TRUE)
+    overall_sd <- sd(x, na.rm = TRUE)
     min_val <- min(x, na.rm = TRUE)
     max_val <- max(x, na.rm = TRUE)
     n_obs <- length(x)
 
     # Calculate between variance (variation in group means)
     group_means <- tapply(x, group_vec, mean, na.rm = TRUE)
-    between_sd <- stats::sd(group_means, na.rm = TRUE)
+    between_sd <- sd(group_means, na.rm = TRUE)
 
     # Calculate within variance (variation around group means)
     # Match group means to original data using character representation
     group_means_expanded <- group_means[match(group_vec, names(group_means))]
-    within_sd <- stats::sd(x - group_means_expanded, na.rm = TRUE)
+    within_sd <- sd(x - group_means_expanded, na.rm = TRUE)
 
     data.frame(
       variable = varname,
@@ -173,7 +157,7 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
 
   # Calculate statistics for each variable
   results <- lapply(variables, function(varname) {
-    decompose_variation_1(data_df, varname, group_var)
+    decompose_variation_1(data_df, varname, group)
   })
 
   # Combine all results
@@ -181,88 +165,8 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
   rownames(result_df) <- NULL
 
   # Add data source information as attribute
-  attr(result_df, "data_source") <- data_class
-  attr(result_df, "group_var") <- group_var
+  attr(result_df, "group_var") <- group
   attr(result_df, "n_groups") <- n_groups
 
   return(result_df)
-}
-
-# Helper function to extract panel information from different data types
-extract_panel_info <- function(data, group = NULL) {
-  data_class <- class(data)
-
-  # Check for plm::pdata.frame
-  if ("pdata.frame" %in% data_class) {
-    if (!requireNamespace("plm", quietly = TRUE)) {
-      stop("Package 'plm' is required for handling pdata.frame objects")
-    }
-
-    index_attrs <- attr(data, "index")
-    if (is.null(index_attrs) || length(index_attrs) == 0) {
-      stop("pdata.frame does not have proper index attributes")
-    }
-
-    if (is.null(group)) {
-      group_var <- names(index_attrs)[1] # First index is usually entity
-      if (is.null(group_var)) {
-        group_var <- as.character(index_attrs[[1]])[1]
-      }
-    } else {
-      group_var <- group
-    }
-
-    # Convert to regular data frame for processing
-    data_df <- as.data.frame(data)
-
-    # Ensure group variable exists in data
-    if (!group_var %in% names(data_df)) {
-      data_df[[group_var]] <- index_attrs[[1]]
-    }
-
-    return(list(
-      data = data_df,
-      group_var = group_var,
-      data_class = "pdata.frame"
-    ))
-  }
-
-  # Check for fixest panel data (look for panel attributes)
-  fixest_panel_attrs <- c("panel_info", "fixest_panel")
-  has_fixest_attr <- any(fixest_panel_attrs %in% names(attributes(data)))
-
-  if (has_fixest_attr) {
-    if (is.null(group)) {
-      # Try to extract group variable from fixest panel attributes
-      panel_info <- attr(data, "panel_info")
-      if (!is.null(panel_info) && !is.null(panel_info$panel.id)) {
-        group_var <- panel_info$panel.id[1]
-      } else {
-        stop("For fixest panel data, please specify the 'group' parameter")
-      }
-    } else {
-      group_var <- group
-    }
-
-    return(list(
-      data = as.data.frame(data),
-      group_var = group_var,
-      data_class = "fixest_panel"
-    ))
-  }
-
-  # Regular data frame - group must be specified
-  if (is.null(group)) {
-    stop("For regular data frames, the 'group' parameter must be specified")
-  }
-
-  if (!group %in% names(data)) {
-    stop("Group variable '", group, "' not found in data frame")
-  }
-
-  return(list(
-    data = as.data.frame(data),
-    group_var = group,
-    data_class = "data.frame"
-  ))
 }
