@@ -6,8 +6,8 @@
 \usage{
 plot_heterogeneity(
   data,
-  varname,
-  by,
+  variable,
+  group = NULL,
   xlab = NULL,
   ylab = NULL,
   point_col = "gray50",
@@ -16,15 +16,18 @@ plot_heterogeneity(
   mean_lwd = 2,
   cex = 1,
   las = 1,
-  plot = TRUE
+  plot = TRUE,
+  ncol = NULL,
+  nrow = NULL
 )
 }
 \arguments{
-\item{data}{A data frame in long panel format or tidy format}
+\item{data}{A data frame in long panel format, tidy format, plm::pdata.frame, or fixest::panel object}
 
-\item{varname}{The numeric variable of interest (unquoted name or string)}
+\item{variable}{The numeric variable of interest (character string)}
 
-\item{by}{The grouping variable (unquoted name or string)}
+\item{group}{The grouping variable(s) (character string or vector of character strings).
+If NULL and data is a panel data object, uses panel index variables.}
 
 \item{xlab}{X-axis label (default: based on grouping variable)}
 
@@ -43,19 +46,25 @@ plot_heterogeneity(
 \item{las}{Orientation of axis labels (default: 1)}
 
 \item{plot}{Logical, whether to create the plot (default: TRUE)}
+
+\item{ncol}{Number of columns in facet grid (default: NULL, auto-determined)}
+
+\item{nrow}{Number of rows in facet grid (default: NULL, auto-determined)}
 }
 \value{
 Invisibly returns a list with summary statistics. Creates a base R plot.
 }
 \description{
 Creates publication-ready visualizations of heterogeneity among groups using base R graphics.
-Designed for panel data to show variation across object identifiers or time periods.
+Designed for panel data to show variation across object identifiers or time periods. Supports
+multiple grouping variables (faceting) and automatic handling of panel data objects.
 }
 \examples{
 if(requireNamespace("AER", quietly = TRUE)) {
   data("Fatalities", package = "AER")
-  plot_heterogeneity(Fatalities, fatalrate, year)
-  plot_heterogeneity(Fatalities, fatalrate, state)
+  plot_heterogeneity(Fatalities, "fatalrate", "year")
+  plot_heterogeneity(Fatalities, "fatalrate", "state")
+  plot_heterogeneity(Fatalities, "fatalrate", c("year", "state"))
 }
 
 }
