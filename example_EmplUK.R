@@ -71,4 +71,33 @@ plot_heterogeneity(df, variable = "emp", group = c("firm", "year"))
 
 ## plm::pdata.frame() class ---------------------------------------------------------------------
 
+### Explore NAs
+find_incomplete(df_plm)
+explore_incomplete(df_plm)
+
+describe_participation(df_plm) # error
+explore_participation(df_plm)
+plot_participation(df_plm)
+
+### Descriptive statistics
+decompose_variation(df_plm) # error
+
+### Plot heterogeneity
+plot_heterogeneity(df_plm, variable = "emp")
+
+
 ## fixest::panel() class ------------------------------------------------------------------------
+
+### Explore NAs
+find_incomplete(df_fixest) # error
+explore_incomplete(df_fixest) # error
+
+describe_participation(df_fixest) # error
+explore_participation(df_fixest) # error
+plot_participation(df_fixest) # error
+
+### Descriptive statistics
+decompose_variation(df_fixest) # error
+
+### Plot heterogeneity
+plot_heterogeneity(df_fixest, variable = "emp") # error
