@@ -54,13 +54,18 @@ describe_by(
   group = "firm"
 )
 
-panelDT::decompose_variation(
+decompose_variation(
   df,
   variables = c("emp", "wage", "capital", "output"),
   group = "firm"
 )
 
 decompose_variation(df, group = "firm")
+
+### Plot heterogeneity
+
+plot_heterogeneity(df, variable = "emp", group = "year")
+plot_heterogeneity(df, variable = "emp", group = "firm")
 
 ## plm::pdata.frame() class ---------------------------------------------------------------------
 
