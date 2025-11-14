@@ -25,10 +25,13 @@ class(df)
 class(df_plm)
 class(df_fixest)
 
+df$firm_fct <- as.factor(df$firm)
+df$firm_chr <- as.character(df$firm)
+
 
 # Explore the data ==============================================================================
 
-## General case ---------------------------------------------------------------------------------
+## General case (numeric id) --------------------------------------------------------------------
 
 ### Explore NAs
 find_incomplete(df, group = "firm")
@@ -68,6 +71,68 @@ plot_heterogeneity(df, variable = "emp", group = "year")
 plot_heterogeneity(df, variable = "emp", group = "firm")
 
 plot_heterogeneity(df, variable = "emp", group = c("firm", "year"))
+
+## General case (factor id) --------------------------------------------------------------------
+
+### Explore NAs
+find_incomplete(df, group = "firm_fct")
+explore_incomplete(df, group = "firm_fct")
+
+describe_participation(df, group = "firm_fct", time = "year")
+explore_participation(df, group = "firm_fct", time = "year")
+plot_participation(df, group = "firm_fct", time = "year")
+
+### Descriptive statistics
+describe_by(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm_fct"
+)
+
+decompose_variation(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm_fct"
+)
+
+decompose_variation(df, group = "firm_fct")
+
+### Plot heterogeneity
+
+plot_heterogeneity(df, variable = "emp", group = "firm_fct")
+plot_heterogeneity(df, variable = "emp", group = c("firm_fct", "year"))
+
+
+## General case (character id) -------------------------------------------------------------
+
+### Explore NAs
+find_incomplete(df, group = "firm_chr")
+explore_incomplete(df, group = "firm_chr")
+
+describe_participation(df, group = "firm_chr", time = "year")
+explore_participation(df, group = "firm_chr", time = "year")
+plot_participation(df, group = "firm_chr", time = "year")
+
+### Descriptive statistics
+describe_by(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm_chr"
+)
+
+decompose_variation(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm_chr"
+)
+
+decompose_variation(df, group = "firm_chr")
+
+### Plot heterogeneity
+
+plot_heterogeneity(df, variable = "emp", group = "firm_chr")
+plot_heterogeneity(df, variable = "emp", group = c("firm_chr", "year"))
+
 
 ## plm::pdata.frame() class ---------------------------------------------------------------------
 
