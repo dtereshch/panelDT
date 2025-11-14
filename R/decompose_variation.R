@@ -156,7 +156,7 @@ decompose_variation <- function(data, variables = NULL, group = NULL) {
 
     # Calculate within variance (variation around group means)
     # Match group means to original data using character representation
-    group_means_expanded <- group_means[group_vec]
+    group_means_expanded <- group_means[match(group_vec, names(group_means))]
     within_sd <- stats::sd(x - group_means_expanded, na.rm = TRUE)
 
     data.frame(
@@ -199,15 +199,26 @@ extract_panel_info <- function(data, group = NULL) {
     }
 
     index_attrs <- attr(data, "index")
+    if (is.null(index_attrs) || length(index_attrs) == 0) {
+      stop("pdata.frame does not have proper index attributes")
+    }
+
     if (is.null(group)) {
-      group_var <- as.character(index_attrs[[1]]) # First index is usually entity
+      group_var <- names(index_attrs)[1] # First index is usually entity
+      if (is.null(group_var)) {
+        group_var <- as.character(index_attrs[[1]])[1]
+      }
     } else {
       group_var <- group
     }
 
     # Convert to regular data frame for processing
     data_df <- as.data.frame(data)
-    data_df[[group_var]] <- index_attrs[[1]]
+
+    # Ensure group variable exists in data
+    if (!group_var %in% names(data_df)) {
+      data_df[[group_var]] <- index_attrs[[1]]
+    }
 
     return(list(
       data = data_df,
@@ -217,13 +228,14 @@ extract_panel_info <- function(data, group = NULL) {
   }
 
   # Check for fixest panel data (look for panel attributes)
-  if (
-    !is.null(attr(data, "panel_info")) || !is.null(attr(data, "fixest_panel"))
-  ) {
+  fixest_panel_attrs <- c("panel_info", "fixest_panel")
+  has_fixest_attr <- any(fixest_panel_attrs %in% names(attributes(data)))
+
+  if (has_fixest_attr) {
     if (is.null(group)) {
       # Try to extract group variable from fixest panel attributes
       panel_info <- attr(data, "panel_info")
-      if (!is.null(panel_info$panel.id)) {
+      if (!is.null(panel_info) && !is.null(panel_info$panel.id)) {
         group_var <- panel_info$panel.id[1]
       } else {
         stop("For fixest panel data, please specify the 'group' parameter")
