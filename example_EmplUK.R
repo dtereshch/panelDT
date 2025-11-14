@@ -3,8 +3,8 @@
 
 # Setup ========================================================================================
 
-# library(devtools)
-# install_github("dtereshch/panelDT")
+library(devtools)
+install_github("dtereshch/panelDT")
 
 library(plm)
 library(fixest)
@@ -30,14 +30,37 @@ class(df_fixest)
 
 ## General case ---------------------------------------------------------------------------------
 
-### NAs
-
+### Explore NAs
 find_incomplete(df, group = "firm")
 explore_incomplete(df, group = "firm")
 
 describe_participation(df, group = "firm", time = "year")
 explore_participation(df, group = "firm", time = "year")
 plot_participation(df, group = "firm", time = "year")
+
+### Descriptive statistics
+describe(df)
+describe(df, variables = c("emp", "wage", "capital", "output"))
+
+describe_by(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "year"
+)
+
+describe_by(
+  df,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm"
+)
+
+decompose_variation(
+  EmplUK,
+  variables = c("emp", "wage", "capital", "output"),
+  group = "firm"
+)
+
+decompose_variation(df, group = "firm")
 
 ## plm::pdata.frame() class ---------------------------------------------------------------------
 
