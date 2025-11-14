@@ -167,7 +167,7 @@ plot_heterogeneity <- function(
       ylim = range(data_sub[[variable]], na.rm = TRUE),
       xlab = xlab_single,
       ylab = ylab_single,
-      main = group_var, # Use group variable as title for facet
+      main = "", # Remove title
       xaxt = "n",
       frame.plot = FALSE
     )
@@ -198,6 +198,18 @@ plot_heterogeneity <- function(
 
     # Add grid
     grid()
+
+    # Add legend to every plot
+    legend(
+      "topright",
+      legend = c("Individual observations", "Group means"),
+      col = c(point_col, mean_col),
+      pch = c(16, 18),
+      lty = c(NA, 1),
+      pt.cex = c(0.8, 1.5),
+      bty = "n",
+      cex = 0.8 * cex # Slightly smaller legend for multi-panel plots
+    )
 
     # Return summary statistics for this group
     list(
@@ -261,19 +273,6 @@ plot_heterogeneity <- function(
         ylab_single
       )
       summary_stats$group_stats[[group_var]] <- group_stats
-    }
-
-    # Add overall legend for single plot only
-    if (length(group) == 1) {
-      legend(
-        "topright",
-        legend = c("Individual observations", "Group means"),
-        col = c(point_col, mean_col),
-        pch = c(16, 18),
-        lty = c(NA, 1),
-        pt.cex = c(0.8, 1.5),
-        bty = "n"
-      )
     }
   } else {
     # Calculate statistics without plotting

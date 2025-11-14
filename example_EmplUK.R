@@ -67,6 +67,8 @@ decompose_variation(df, group = "firm")
 plot_heterogeneity(df, variable = "emp", group = "year")
 plot_heterogeneity(df, variable = "emp", group = "firm")
 
+plot_heterogeneity(df, variable = "emp", group = c("firm", "year"))
+
 ## plm::pdata.frame() class ---------------------------------------------------------------------
 
 ## fixest::panel() class ------------------------------------------------------------------------
