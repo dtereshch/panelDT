@@ -54,8 +54,8 @@ describe_by(
   group = "firm"
 )
 
-decompose_variation(
-  EmplUK,
+panelDT::decompose_variation(
+  df,
   variables = c("emp", "wage", "capital", "output"),
   group = "firm"
 )
