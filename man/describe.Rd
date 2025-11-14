@@ -2,23 +2,44 @@
 % Please edit documentation in R/describe.R
 \name{describe}
 \alias{describe}
-\title{Calculating basic descriptive statistics}
+\title{Calculate Basic Descriptive Statistics}
 \usage{
-describe(data, varnames)
+describe(data, variables = NULL)
 }
 \arguments{
-\item{data}{The data frame}
+\item{data}{A data frame containing the variables to analyze.}
 
-\item{varnames}{The vector of numeric columns/variables of interest}
+\item{variables}{An optional character vector specifying which numeric variables to analyze.
+If NULL (default), all numeric columns in the data frame will be used.}
 }
 \value{
-The tibble with basic descriptive statistics of selected columns
+A data frame with one row per variable and the following columns:
+  \item{variable}{The name of the variable}
+  \item{n}{Number of non-NA observations}
+  \item{mean}{Arithmetic mean}
+  \item{median}{Median value}
+  \item{sd}{Standard deviation}
+  \item{min}{Minimum value}
+  \item{max}{Maximum value}
 }
 \description{
-Created to provide basic descriptive statistics in the tibble format
+Provides comprehensive descriptive statistics for numeric variables in a data frame.
+Returns results in a data frame format with statistics for each variable.
+By default, analyzes all numeric columns when no specific variables are specified.
 }
 \examples{
-data("iris")
-vars_select <- c("Sepal.Length", "Sepal.Width")
-describe(iris, vars_select) 
+# Using default - analyze all numeric columns
+describe(mtcars)
+
+# Specify specific numeric variables
+describe(mtcars, c("mpg", "wt", "hp"))
+
+# Using with iris dataset
+data(iris)
+describe(iris, c("Sepal.Length", "Sepal.Width"))
+
+# Handle datasets with all NA values gracefully
+df <- data.frame(a = c(1, 2, 3, NA), b = c(NA, NA, NA, NA))
+describe(df)
+
 }

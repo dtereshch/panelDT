@@ -2,24 +2,42 @@
 % Please edit documentation in R/describe_by.R
 \name{describe_by}
 \alias{describe_by}
-\title{Calculating group descriptive statistics}
+\title{Calculate Group Descriptive Statistics}
 \usage{
-describe_by(data, varnames, groupvar)
+describe_by(data, variables, group)
 }
 \arguments{
-\item{data}{The data frame}
+\item{data}{A data frame containing the variables to analyze.}
 
-\item{varnames}{The vector of numeric columns/variables of interest}
+\item{variables}{A character vector specifying which numeric variables to analyze.}
 
-\item{groupvar}{The vector of factor columns/variables representing groups}
+\item{group}{A character vector specifying the grouping variable(s).}
 }
 \value{
-The tibble with group descriptive statistics of selected columns
+A data frame with the following columns:
+  \item{Grouping variables}{One column for each grouping variable}
+  \item{variable}{The name of the numeric variable}
+  \item{n}{Number of non-NA observations}
+  \item{mean}{Arithmetic mean}
+  \item{median}{Median value}
+  \item{sd}{Standard deviation}
+  \item{min}{Minimum value}
+  \item{max}{Maximum value}
 }
 \description{
-Created to provide group descriptive statistics in the tibble format
+Provides comprehensive descriptive statistics for numeric variables grouped by
+one or more grouping variables. Returns results in a clean data frame format
+with statistics for each variable within each group.
 }
 \examples{
-data("iris")
-describe_by(iris, c(Sepal.Length, Sepal.Width), Species)
+# Single grouping variable
+describe_by(mtcars, c("mpg", "wt"), "cyl")
+
+# Multiple grouping variables
+describe_by(mtcars, c("mpg", "wt"), c("cyl", "am"))
+
+# Using with iris dataset
+data(iris)
+describe_by(iris, c("Sepal.Length", "Sepal.Width"), "Species")
+
 }
