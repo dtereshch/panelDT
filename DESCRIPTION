@@ -2,4 +2,6 @@ Package: panelDT
 Type: Package
 Title: R package for exploring and describing panel data
 Version: 0.0.0.0
+LazyData: true
+Encoding: UTF-8
 RoxygenNote: 7.3.2
