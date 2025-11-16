@@ -7,7 +7,7 @@
 describe_transition(data, variable, group = NULL, time = NULL, format = "wide")
 }
 \arguments{
-\item{data}{A data frame, pdata.frame, or fixest panel object containing panel data}
+\item{data}{A data frame containing panel data}
 
 \item{variable}{Character string specifying the factor variable to analyze transitions for}
 
@@ -15,40 +15,22 @@ describe_transition(data, variable, group = NULL, time = NULL, format = "wide")
 
 \item{time}{Character string specifying the time variable}
 
-\item{format}{Character string specifying the output format: "long" or "wide (default)"}
+\item{format}{Character string specifying the output format: "wide (default)" or "long"}
 }
 \value{
-A data frame in either long or wide format containing transition probabilities
+A data frame in either wide or long format containing transition probabilities
 }
 \description{
 This function replicates Stata's xttrans command, calculating transition probabilities
 between states of a categorical variable across time periods for panel data.
 }
 \examples{
-# Create example panel data with factor variable
-set.seed(123)
-panel_data <- data.frame(
-  id = rep(1:100, each = 3),
-  time = rep(1:3, 100),
-  status = factor(sample(c("low", "medium", "high"), 300, replace = TRUE),
-                  levels = c("low", "medium", "high"))
-)
+data(production)
 
-# Analyze transitions in long format (default)
-result_long <- describe_transition(panel_data, "status", "id", "time")
-head(result_long)
+# Analyze transitions in wide format (default)
+describe_transition(production, variable = "status", group = "firm", time = "year")
 
-# Analyze transitions in wide format
-result_wide <- describe_transition(panel_data, "status", "id", "time", format = "wide")
-print(result_wide)
-
-# Using plm pdata.frame
-\dontrun{
-library(plm)
-data("EmplUK", package = "plm")
-EmplUK$sector <- factor(EmplUK$sector)
-pdata <- pdata.frame(EmplUK, index = c("firm", "year"))
-describe_transition(pdata, "sector")
-}
+# Analyze transitions in long format
+describe_transition(production, variable = "status", group = "firm", time = "year", format = "long")
 
 }

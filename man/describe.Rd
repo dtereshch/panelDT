@@ -28,18 +28,15 @@ Returns results in a data frame format with statistics for each variable.
 By default, analyzes all numeric columns when no specific variables are specified.
 }
 \examples{
-# Using default - analyze all numeric columns
-describe(mtcars)
+data(production)
 
-# Specify specific numeric variables
-describe(mtcars, c("mpg", "wt", "hp"))
+# Using default - analyze all numeric variables
+describe(production)
 
-# Using with iris dataset
-data(iris)
-describe(iris, c("Sepal.Length", "Sepal.Width"))
+# Specify single numeric variable
+describe(production, variables = "sales")
 
-# Handle datasets with all NA values gracefully
-df <- data.frame(a = c(1, 2, 3, NA), b = c(NA, NA, NA, NA))
-describe(df)
+# Specify group of numeric variables
+describe(production, variables = c("sales", "capital", "labor"))
 
 }

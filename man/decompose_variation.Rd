@@ -30,3 +30,20 @@ Inspired by Stata's xtsum command, this function calculates descriptive statisti
 for panel data and decomposes variance into between and within components.
 Provides insights into variation across groups and over time.
 }
+\examples{
+data(production)
+
+# Using default - analyze all numeric variables
+decompose_variation(production, group = "firm")
+
+# Specify single numeric variable
+decompose_variation(production, variables = "sales", group = "firm")
+
+# Specify group of numeric variables
+decompose_variation(production, variables = c("sales", "capital", "labor"), group = "firm")
+
+}
+\references{
+Based on Stata's xtsum command and corresponding discussion at
+https://stackoverflow.com/questions/49282083/xtsum-command-for-r
+}

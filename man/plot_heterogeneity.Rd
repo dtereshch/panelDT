@@ -10,7 +10,7 @@ plot_heterogeneity(
   group = NULL,
   xlab = NULL,
   ylab = NULL,
-  point_col = "gray50",
+  point_col = "#D55E00",
   mean_col = "#0072B2",
   point_alpha = 0.6,
   mean_lwd = 2,
@@ -22,18 +22,17 @@ plot_heterogeneity(
 )
 }
 \arguments{
-\item{data}{A data frame in long panel format, tidy format, plm::pdata.frame, or fixest::panel object}
+\item{data}{A data frame in long panel format or tidy format}
 
 \item{variable}{The numeric variable of interest (character string)}
 
-\item{group}{The grouping variable(s) (character string or vector of character strings).
-If NULL and data is a panel data object, uses panel index variables.}
+\item{group}{The grouping variable(s) (character string or vector of character strings)}
 
 \item{xlab}{X-axis label (default: based on grouping variable)}
 
 \item{ylab}{Y-axis label (default: based on variable name)}
 
-\item{point_col}{Color for individual points (default: "gray50")}
+\item{point_col}{Color for individual points (default: "#D55E00") # orange}
 
 \item{mean_col}{Color for mean line and points (default: "#0072B2") # blue}
 
@@ -57,14 +56,24 @@ Invisibly returns a list with summary statistics. Creates a base R plot.
 \description{
 Creates publication-ready visualizations of heterogeneity among groups using base R graphics.
 Designed for panel data to show variation across object identifiers or time periods. Supports
-multiple grouping variables (faceting) and automatic handling of panel data objects.
+multiple grouping variables (faceting).
 }
 \examples{
-if(requireNamespace("AER", quietly = TRUE)) {
-  data("Fatalities", package = "AER")
-  plot_heterogeneity(Fatalities, "fatalrate", "year")
-  plot_heterogeneity(Fatalities, "fatalrate", "state")
-  plot_heterogeneity(Fatalities, "fatalrate", c("year", "state"))
-}
+data(production)
+
+# Plot labor by year
+plot_heterogeneity(production, variable = "labor", group = "year")
+
+# Plot capital by firm
+plot_heterogeneity(production, variable = "capital", group = "firm")
+
+# Plot sales with multiple grouping variables
+plot_heterogeneity(production, variable = "sales", group = c("firm", "year"))
+
+# Customize colors and appearance
+plot_heterogeneity(production, variable = "sales", group = "year",
+                  point_col = "gray50",
+                  mean_col = "black",
+                  mean_lwd = 3)
 
 }

@@ -9,13 +9,14 @@ describe_by(data, variables, group)
 \arguments{
 \item{data}{A data frame containing the variables to analyze.}
 
-\item{variables}{A character vector specifying which numeric variables to analyze.}
+\item{variables}{A character vector specifying which numeric variables to analyze.
+If not specified, all numeric variables in the data frame will be used.}
 
-\item{group}{A character vector specifying the grouping variable(s).}
+\item{group}{A character string specifying the grouping variable.}
 }
 \value{
 A data frame with the following columns:
-  \item{Grouping variables}{One column for each grouping variable}
+  \item{group}{The grouping variable}
   \item{variable}{The name of the numeric variable}
   \item{n}{Number of non-NA observations}
   \item{mean}{Arithmetic mean}
@@ -26,18 +27,21 @@ A data frame with the following columns:
 }
 \description{
 Provides comprehensive descriptive statistics for numeric variables grouped by
-one or more grouping variables. Returns results in a clean data frame format
+a single grouping variable. Returns results in a clean data frame format
 with statistics for each variable within each group.
 }
 \examples{
-# Single grouping variable
-describe_by(mtcars, c("mpg", "wt"), "cyl")
+data(production)
 
-# Multiple grouping variables
-describe_by(mtcars, c("mpg", "wt"), c("cyl", "am"))
+# Using default - analyze all numeric variables
+describe_by(production, group = "year")
 
-# Using with iris dataset
-data(iris)
-describe_by(iris, c("Sepal.Length", "Sepal.Width"), "Species")
+# Specify single numeric variable
+describe_by(production, variables = "sales", group = "year")
+describe_by(production, variables = "sales", group = "firm")
+
+# Specify group of numeric variables
+describe_by(production, variables = c("sales", "capital", "labor"), group = "year")
+describe_by(production, variables = c("sales", "capital", "labor"), group = "firm")#'
 
 }
