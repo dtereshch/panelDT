@@ -3,40 +3,22 @@
 #' This function replicates Stata's xttrans command, calculating transition probabilities
 #' between states of a categorical variable across time periods for panel data.
 #'
-#' @param data A data frame, pdata.frame, or fixest panel object containing panel data
+#' @param data A data frame containing panel data
 #' @param variable Character string specifying the factor variable to analyze transitions for
 #' @param group Character string specifying the entity/group variable (e.g., individual ID)
 #' @param time Character string specifying the time variable
-#' @param format Character string specifying the output format: "long" or "wide (default)"
+#' @param format Character string specifying the output format: "wide (default)" or "long"
 #'
-#' @return A data frame in either long or wide format containing transition probabilities
+#' @return A data frame in either wide or long format containing transition probabilities
 #'
 #' @examples
-#' # Create example panel data with factor variable
-#' set.seed(123)
-#' panel_data <- data.frame(
-#'   id = rep(1:100, each = 3),
-#'   time = rep(1:3, 100),
-#'   status = factor(sample(c("low", "medium", "high"), 300, replace = TRUE),
-#'                   levels = c("low", "medium", "high"))
-#' )
+#' data(production)
 #'
-#' # Analyze transitions in long format (default)
-#' result_long <- describe_transition(panel_data, "status", "id", "time")
-#' head(result_long)
+#' # Analyze transitions in wide format (default)
+#' describe_transition(production, variable = "status", group = "firm", time = "year")
 #'
-#' # Analyze transitions in wide format
-#' result_wide <- describe_transition(panel_data, "status", "id", "time", format = "wide")
-#' print(result_wide)
-#'
-#' # Using plm pdata.frame
-#' \dontrun{
-#' library(plm)
-#' data("EmplUK", package = "plm")
-#' EmplUK$sector <- factor(EmplUK$sector)
-#' pdata <- pdata.frame(EmplUK, index = c("firm", "year"))
-#' describe_transition(pdata, "sector")
-#' }
+#' # Analyze transitions in long format
+#' describe_transition(production, variable = "status", group = "firm", time = "year", format = "long")
 #'
 #' @export
 describe_transition <- function(
@@ -60,44 +42,9 @@ describe_transition <- function(
     stop("format must be either 'long' or 'wide'")
   }
 
-  # Handle special panel data objects
-  if (inherits(data, "pdata.frame")) {
-    if (is.null(group) || is.null(time)) {
-      index_attrs <- attr(data, "index")
-      group <- as.character(index_attrs[[1]])
-      time <- as.character(index_attrs[[2]])
-      message(
-        "Using group variable: '",
-        group,
-        "' and time variable: '",
-        time,
-        "' from pdata.frame"
-      )
-    }
-  } else if (inherits(data, "fixest")) {
-    if (is.null(group) || is.null(time)) {
-      if (requireNamespace("fixest", quietly = TRUE)) {
-        panel_info <- fixest::panel_info(data)
-        if (!is.null(panel_info)) {
-          group <- panel_info$panel.id[[1]]
-          time <- panel_info$panel.id[[2]]
-          message(
-            "Using group variable: '",
-            group,
-            "' and time variable: '",
-            time,
-            "' from fixest object"
-          )
-        }
-      } else {
-        stop("fixest package is required to handle fixest objects")
-      }
-    }
-  }
-
-  # Validate group and time for regular data frames
+  # Validate group and time for data frames
   if (is.null(group) || is.null(time)) {
-    stop("Both 'group' and 'time' must be specified for regular data frames")
+    stop("Both 'group' and 'time' must be specified")
   }
 
   if (!is.character(group) || length(group) != 1) {
@@ -236,9 +183,9 @@ describe_transition <- function(
   rownames(wide_result) <- NULL
 
   # Return the requested format
-  if (format == "long") {
-    return(long_result)
-  } else {
+  if (format == "wide") {
     return(wide_result)
+  } else {
+    return(long_result)
   }
 }

@@ -1,15 +1,16 @@
 #' Calculate Group Descriptive Statistics
 #'
 #' Provides comprehensive descriptive statistics for numeric variables grouped by
-#' one or more grouping variables. Returns results in a clean data frame format
+#' a single grouping variable. Returns results in a clean data frame format
 #' with statistics for each variable within each group.
 #'
 #' @param data A data frame containing the variables to analyze.
 #' @param variables A character vector specifying which numeric variables to analyze.
-#' @param group A character vector specifying the grouping variable(s).
+#'        If not specified, all numeric variables in the data frame will be used.
+#' @param group A character string specifying the grouping variable.
 #'
 #' @return A data frame with the following columns:
-#'   \item{Grouping variables}{One column for each grouping variable}
+#'   \item{group}{The grouping variable}
 #'   \item{variable}{The name of the numeric variable}
 #'   \item{n}{Number of non-NA observations}
 #'   \item{mean}{Arithmetic mean}
@@ -19,15 +20,18 @@
 #'   \item{max}{Maximum value}
 #'
 #' @examples
-#' # Single grouping variable
-#' describe_by(mtcars, c("mpg", "wt"), "cyl")
+#' data(production)
 #'
-#' # Multiple grouping variables
-#' describe_by(mtcars, c("mpg", "wt"), c("cyl", "am"))
+#' # Using default - analyze all numeric variables
+#' describe_by(production, group = "year")
 #'
-#' # Using with iris dataset
-#' data(iris)
-#' describe_by(iris, c("Sepal.Length", "Sepal.Width"), "Species")
+#' # Specify single numeric variable
+#' describe_by(production, variables = "sales", group = "year")
+#' describe_by(production, variables = "sales", group = "firm")
+#'
+#' # Specify group of numeric variables
+#' describe_by(production, variables = c("sales", "capital", "labor"), group = "year")
+#' describe_by(production, variables = c("sales", "capital", "labor"), group = "firm")#'
 #'
 #' @export
 describe_by <- function(data, variables, group) {
@@ -36,9 +40,33 @@ describe_by <- function(data, variables, group) {
     stop("'data' must be a data frame")
   }
 
+  # Validate group
+  if (missing(group) || length(group) == 0) {
+    stop("'group' must be specified")
+  }
+
+  if (length(group) > 1) {
+    stop("Only one grouping variable is supported")
+  }
+
+  missing_groups <- group[!group %in% names(data)]
+  if (length(missing_groups) > 0) {
+    stop(
+      "The following grouping variable was not found in the data frame: ",
+      paste(missing_groups, collapse = ", ")
+    )
+  }
+
+  # If variables not specified, use all numeric variables excluding the group variable
+  if (missing(variables)) {
+    numeric_vars <- sapply(data, is.numeric)
+    variables <- names(data)[numeric_vars]
+    variables <- variables[variables != group] # Exclude group variable
+  }
+
   # Validate variables
-  if (missing(variables) || length(variables) == 0) {
-    stop("'variables' must be specified")
+  if (length(variables) == 0) {
+    stop("No numeric variables found to analyze")
   }
 
   missing_vars <- variables[!variables %in% names(data)]
@@ -58,46 +86,24 @@ describe_by <- function(data, variables, group) {
     )
   }
 
-  # Validate group
-  if (missing(group) || length(group) == 0) {
-    stop("'group' must be specified")
-  }
-
-  missing_groups <- group[!group %in% names(data)]
-  if (length(missing_groups) > 0) {
-    stop(
-      "The following grouping variables were not found in the data frame: ",
-      paste(missing_groups, collapse = ", ")
-    )
-  }
-
   # Helper function to count non-NA values
   count_non_na <- function(x) {
     sum(!is.na(x))
   }
 
-  # Split data by grouping variables
-  group_combinations <- unique(data[group])
-  group_combinations <- group_combinations[
-    do.call(order, group_combinations),
-    ,
-    drop = FALSE
-  ]
+  # Split data by grouping variable
+  group_combinations <- unique(data[[group]])
+  group_combinations <- sort(group_combinations[!is.na(group_combinations)])
 
   results <- list()
 
-  for (i in seq_len(nrow(group_combinations))) {
-    current_group <- group_combinations[i, , drop = FALSE]
+  for (i in seq_along(group_combinations)) {
+    current_group <- group_combinations[i]
 
     # Create subset for current group
-    group_subset <- data
-    for (group_col in group) {
-      group_value <- current_group[[group_col]]
-      group_subset <- group_subset[group_subset[[group_col]] == group_value, ]
-    }
-
-    # Remove rows with NA in grouping variables
-    group_subset <- group_subset[complete.cases(group_subset[group]), ]
+    group_subset <- data[
+      data[[group]] == current_group & !is.na(data[[group]]),
+    ]
 
     # Calculate statistics for each variable in current group
     group_results <- lapply(variables, function(var) {
@@ -125,7 +131,7 @@ describe_by <- function(data, variables, group) {
       }
 
       # Add group information and variable name
-      cbind(current_group, data.frame(variable = var), stats_row)
+      data.frame(group = current_group, variable = var, stats_row)
     })
 
     results <- c(results, group_results)
@@ -134,21 +140,8 @@ describe_by <- function(data, variables, group) {
   # Combine all results into a single data frame
   result_df <- do.call(rbind, results)
 
-  # Reset row names and reorder columns
+  # Reset row names
   rownames(result_df) <- NULL
-
-  # Reorder columns: grouping variables, then variable, then statistics
-  col_order <- c(
-    group,
-    "variable",
-    "n",
-    "mean",
-    "median",
-    "sd",
-    "min",
-    "max"
-  )
-  result_df <- result_df[col_order]
 
   return(result_df)
 }

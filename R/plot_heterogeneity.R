@@ -2,15 +2,14 @@
 #'
 #' Creates publication-ready visualizations of heterogeneity among groups using base R graphics.
 #' Designed for panel data to show variation across object identifiers or time periods. Supports
-#' multiple grouping variables (faceting) and automatic handling of panel data objects.
+#' multiple grouping variables (faceting).
 #'
-#' @param data A data frame in long panel format, tidy format, plm::pdata.frame, or fixest::panel object
+#' @param data A data frame in long panel format or tidy format
 #' @param variable The numeric variable of interest (character string)
-#' @param group The grouping variable(s) (character string or vector of character strings).
-#'   If NULL and data is a panel data object, uses panel index variables.
+#' @param group The grouping variable(s) (character string or vector of character strings)
 #' @param xlab X-axis label (default: based on grouping variable)
 #' @param ylab Y-axis label (default: based on variable name)
-#' @param point_col Color for individual points (default: "gray50")
+#' @param point_col Color for individual points (default: "#D55E00") # orange
 #' @param mean_col Color for mean line and points (default: "#0072B2") # blue
 #' @param point_alpha Transparency for individual points (default: 0.6)
 #' @param mean_lwd Line width for mean trend (default: 2)
@@ -23,12 +22,22 @@
 #' @return Invisibly returns a list with summary statistics. Creates a base R plot.
 #'
 #' @examples
-#' if(requireNamespace("AER", quietly = TRUE)) {
-#'   data("Fatalities", package = "AER")
-#'   plot_heterogeneity(Fatalities, "fatalrate", "year")
-#'   plot_heterogeneity(Fatalities, "fatalrate", "state")
-#'   plot_heterogeneity(Fatalities, "fatalrate", c("year", "state"))
-#' }
+#' data(production)
+#'
+#' # Plot labor by year
+#' plot_heterogeneity(production, variable = "labor", group = "year")
+#'
+#' # Plot capital by firm
+#' plot_heterogeneity(production, variable = "capital", group = "firm")
+#'
+#' # Plot sales with multiple grouping variables
+#' plot_heterogeneity(production, variable = "sales", group = c("firm", "year"))
+#'
+#' # Customize colors and appearance
+#' plot_heterogeneity(production, variable = "sales", group = "year",
+#'                   point_col = "gray50",
+#'                   mean_col = "black",
+#'                   mean_lwd = 3)
 #'
 #' @export
 plot_heterogeneity <- function(
@@ -37,7 +46,7 @@ plot_heterogeneity <- function(
   group = NULL,
   xlab = NULL,
   ylab = NULL,
-  point_col = "gray50",
+  point_col = "#D55E00",
   mean_col = "#0072B2",
   point_alpha = 0.6,
   mean_lwd = 2,
@@ -48,12 +57,8 @@ plot_heterogeneity <- function(
   nrow = NULL
 ) {
   # Input validation
-  if (
-    !is.data.frame(data) &&
-      !inherits(data, "pdata.frame") &&
-      !inherits(data, "fixest_panel")
-  ) {
-    stop("'data' must be a data frame, pdata.frame, or fixest panel object")
+  if (!is.data.frame(data)) {
+    stop("'data' must be a data frame")
   }
 
   if (nrow(data) == 0) {
@@ -65,29 +70,9 @@ plot_heterogeneity <- function(
     stop("'variable' must be a single character string")
   }
 
-  # Handle panel data objects
-  if (inherits(data, "pdata.frame")) {
-    # Extract index from plm pdata.frame
-    index_vars <- attr(data, "index")
-    if (is.null(group)) {
-      group <- names(index_vars)
-    }
-    # Convert to regular data frame for processing
-    data_df <- as.data.frame(data)
-  } else if (inherits(data, "fixest_panel")) {
-    # Extract panel info from fixest
-    panel_info <- attr(data, "panel_info")
-    if (is.null(group)) {
-      group <- c(panel_info$panel.id[[1]], panel_info$panel.id[[2]])
-    }
-    data_df <- as.data.frame(data)
-  } else {
-    data_df <- data
-  }
-
-  # If group is NULL for regular data frame, error
+  # If group is NULL, error
   if (is.null(group)) {
-    stop("'group' must be provided for regular data frames")
+    stop("'group' must be provided")
   }
 
   # Validate group parameter
@@ -96,11 +81,11 @@ plot_heterogeneity <- function(
   }
 
   # Check if variables exist in data
-  if (!variable %in% names(data_df)) {
+  if (!variable %in% names(data)) {
     stop("Variable '", variable, "' not found in data")
   }
 
-  missing_groups <- setdiff(group, names(data_df))
+  missing_groups <- setdiff(group, names(data))
   if (length(missing_groups) > 0) {
     stop(
       "Group variable(s) '",
@@ -110,7 +95,7 @@ plot_heterogeneity <- function(
   }
 
   # Extract the main variable
-  y_var <- data_df[[variable]]
+  y_var <- data[[variable]]
 
   # Check variable type
   if (!is.numeric(y_var)) {
@@ -267,7 +252,7 @@ plot_heterogeneity <- function(
       ylab_single <- if (length(group) == 1) ylab else NULL
 
       group_stats <- create_single_plot(
-        data_df,
+        data,
         group_var,
         xlab_single,
         ylab_single
@@ -277,15 +262,15 @@ plot_heterogeneity <- function(
   } else {
     # Calculate statistics without plotting
     for (group_var in group) {
-      x_var <- data_df[[group_var]]
+      x_var <- data[[group_var]]
       if (!is.factor(x_var)) {
         x_var <- as.factor(x_var)
       }
 
       summary_stats$group_stats[[group_var]] <- list(
-        means = tapply(data_df[[variable]], x_var, mean, na.rm = TRUE),
-        sd = tapply(data_df[[variable]], x_var, sd, na.rm = TRUE),
-        n = tapply(data_df[[variable]], x_var, function(x) sum(!is.na(x)))
+        means = tapply(data[[variable]], x_var, mean, na.rm = TRUE),
+        sd = tapply(data[[variable]], x_var, sd, na.rm = TRUE),
+        n = tapply(data[[variable]], x_var, function(x) sum(!is.na(x)))
       )
     }
   }

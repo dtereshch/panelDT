@@ -19,6 +19,22 @@
 #'   \item{max}{Maximum value}
 #'   \item{obs}{Number of observations}
 #'
+#' @references
+#' Based on Stata's xtsum command and corresponding discussion at
+#' https://stackoverflow.com/questions/49282083/xtsum-command-for-r
+#'
+#' @examples
+#' data(production)
+#'
+#' # Using default - analyze all numeric variables
+#' decompose_variation(production, group = "firm")
+#'
+#' # Specify single numeric variable
+#' decompose_variation(production, variables = "sales", group = "firm")
+#'
+#' # Specify group of numeric variables
+#' decompose_variation(production, variables = c("sales", "capital", "labor"), group = "firm")
+#'
 #' @export
 decompose_variation <- function(data, variables = NULL, group = NULL) {
   # Input validation
